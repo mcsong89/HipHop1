@@ -1,10 +1,16 @@
 import React, { Component } from 'react';
 import AppNavigator from './navigation/AppNavigator';
+import thunk from 'redux-thunk'
+import { Provider } from 'react-redux';
+import { createStore, applyMiddleware } from 'redux';
+import allReducers from './reducers';
+
+const store = createStore(allReducers, window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__(), applyMiddleware(thunk));
 
 export default class Root extends Component {
   constructor(props) {
     super(props);
-    this.state = { loading: true };
+    this.state = {};
   }
 
   async componentWillMount() {
@@ -13,13 +19,13 @@ export default class Root extends Component {
     //   Roboto_medium: require("native-base/Fonts/Roboto_medium.ttf"),
     //   Ionicons: require("@expo/vector-icons/fonts/Ionicons.ttf"),
     // });
-    this.setState({ loading: false });
   }
 
   render() {
-    if (this.state.loading) {
-      return <Expo.AppLoading />;
-    }
-    return <AppNavigator />;
+    return (
+      <Provider store={store}>
+        <AppNavigator />
+      </Provider>
+    )
   }
 }

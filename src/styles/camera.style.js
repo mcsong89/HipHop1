@@ -13,56 +13,90 @@ export default StyleSheet.create({
     },
     topBarContainer: {
         backgroundColor: 'transparent',
-        left: 0,
-        top: 0,
-        right: 0,
+        padding: 15,
         zIndex: 100,
         alignItems: 'center',
         flexDirection: 'row',
         justifyContent: 'space-between',
-    },
-    topBarSearch: {
-        justifyContent: 'space-between',
-        flexDirection: 'row',
-        flex: 3,
     },
     topBarInner: {
         flexDirection: 'row',
         flex: 1,
         justifyContent: 'space-around',
     },
+    topBarLeft: {
+        flex: 1,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+    },
+    topBarRight: {
+        flex: 1,
+        flexDirection: 'row',
+        justifyContent: 'space-around',
+    },
+    close: {
+        color: 'white', fontWeight: 'bold'
+    },
     topBarFlash: {
+        flex: 3,
         color: 'white', fontWeight: 'bold'
     },
     topBarFacing: {
         color: 'white', fontWeight: 'bold'
     },
-    bottomBarContainer: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        paddingHorizontal: 10,
-        marginBottom: 15,
-        alignItems: 'flex-end',
+    topBarCameraOff: {
+        color: 'white', fontWeight: 'bold'
     },
-    bottomBarRecordButton: {
-        height: 72,
-        width: 72,
-        borderWidth: 5,
-        borderColor: '#FFFFFF',
-        borderRadius: 36,
+    bottomBarRecordArea: {
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    bottomBarRecordWarp: {
+        height: 80,
+        width: 80,
+        borderWidth: 3,
+        borderColor: 'rgba(190, 0, 4, 1)',
+        borderRadius: 50,
         justifyContent: 'center',
         alignItems: 'center',
     },
-    bottomBarRecord: {
-        height: 50,
-        width: 50,
+    bottomBarRecordInner: {
+        height: 70,
+        width: 70,
         borderRadius: 50,
         backgroundColor: 'rgba(190, 0, 4, 1)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    countDown: {
+        color: 'white',
+        fontSize: 35,
+        fontWeight: 'bold',
+        textAlign: 'center',
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     bottomBarStop: {
-        color: 'rgba(190, 0, 4, 1)', fontWeight: 'bold'
+        color: 'rgba(190, 0, 4, 1)',
+        fontWeight: 'bold',
     },
     cameraContainer: {
-        flex: 1, justifyContent: 'space-between'
+        flex: 1,
+        justifyContent: 'space-between',
+    },
+    bottomBarBeatArea: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'flex-end',
+        paddingHorizontal: 10,
+        marginBottom: 15,
+    },
+    beatPlay: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    beatName: {
+        color: 'white',
+        fontSize: 20,
     }
 });

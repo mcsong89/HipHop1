@@ -76,16 +76,14 @@ export default class Feed extends Component {
   // }
 
   momentumExample(title) {
-    const { navigate } = this.props.navigation;
-
     return (
       <View>
         <View style={styles.RECArea}>
-          <TouchableOpacity onPress={() => navigate('Camera')}>
+          <TouchableOpacity onPress={() => this.props.navigation.navigate('Camera')}>
             <Icon
               style={styles.RECbutton}
               name="camera"
-              // onPress={() => this.swipe(-1)}
+            // onPress={() => this.swipe(-1)}
             />
           </TouchableOpacity>
         </View>

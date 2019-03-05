@@ -1,3 +1,4 @@
+/* eslint-disable */
 import React, { Component } from 'react';
 import {
   View,
@@ -28,11 +29,11 @@ import {
   Octicons,
 } from '@expo/vector-icons';
 import { withNavigationFocus } from 'react-navigation';
-import { durationToStr } from '../utils/dateHelper';
 import CountDown from 'react-native-countdown-component';
 import styles from '../styles/camera.style';
 import { connect } from 'react-redux';
-import { fetchCamera } from '../reducers/cameraReducer';
+import { bindActionCreators } from 'redux';
+import { actionCreators as videoActions } from '../reducers/cameraReducer';
 
 import Mask from '../components/Mask';
 import Glasses from '../components/Glasses';
@@ -56,6 +57,17 @@ const cameraIcons = {
   off: 'camera-off',
 };
 
+function formatTime(time) {
+  var minutes = Math.floor(time / 60);
+  time -= minutes * 60;
+
+  var seconds = parseInt(time % 60, 10);
+
+  return `${minutes < 10 ? `0${minutes}` : minutes}:${
+    seconds < 10 ? `0${seconds}` : seconds
+  }`;
+}
+
 class CameraComponent extends Component {
   static navigationOptions = {
     tabBarVisible: false,
@@ -71,7 +83,6 @@ class CameraComponent extends Component {
       isCameraOn: 'on',
       flash: 'off',
       readyRecord: false,
-      startRecord: false,
       whiteBalance: 'auto',
       ratio: '16:9',
       autoFocus: 'on',
@@ -82,7 +93,7 @@ class CameraComponent extends Component {
       recordingId: 1,
       timer: 3,
       isPlaying: false,
-      duration: 0,
+      interval: null,
     };
 
     // this.onFacesDetected = this.onFacesDetected.bind(this);
@@ -115,13 +126,38 @@ class CameraComponent extends Component {
 
   componentWillBlur() {
     // Screen will leave
-    this.stopRecording();
+    const currentProps = this.props;
+
+    clearInterval(this.state.interval);
+    if (currentProps.camera.elapsedTime !== 0 || this.state.timer < 3) {
+      currentProps.restartTimer();
+      this.setState({
+        readyRecord: false,
+        timer: 3,
+      });
+    }
   }
 
-  componentWillReceiveProps() {
+  componentWillReceiveProps(nextProps) {
+    const currentProps = this.props;
+
+    if (!currentProps.camera.isPlaying && nextProps.camera.isPlaying) {
+      const timerInterval = setInterval(() => {
+        currentProps.addSecond();
+      }, 1000);
+      this.setState({
+        interval: timerInterval,
+      });
+    } else if (currentProps.camera.isPlaying && !nextProps.camera.isPlaying) {
+      clearInterval(this.state.interval);
+      this.stopRecording();
+    }
+  }
+
+  componentDidUpdate() {
     const isFocused = this.props.isFocused;
 
-    if (!isFocused) {
+    if (isFocused) {
       this.componentWillFocus();
     } else {
       this.componentWillBlur();
@@ -129,15 +165,16 @@ class CameraComponent extends Component {
   }
 
   componentWillUnmount() {
-    clearInterval(this.interval);
-    clearInterval(this.Interval_duration);
+    clearInterval(this.state.interval);
   }
 
-  componentDidUpdate() {
-    if (this.state.timer === 0) {
-      clearInterval(this.interval);
+  componentWillUpdate() {
+    const currentProps = this.props;
+
+    if (this.state.timer === 0 && currentProps.camera.elapsedTime === 0) {
+      clearInterval(this.state.interval);
+      currentProps.startTimer();
       this.startRecording();
-      this.setVideoDuration();
     }
   }
 
@@ -155,7 +192,7 @@ class CameraComponent extends Component {
   // }
   closeCamera = () => {
     this.props.navigation.goBack();
-  }
+  };
 
   toggleFlash = () => {
     this.setState({ flash: flashModeOrder[this.state.flash] });
@@ -166,7 +203,9 @@ class CameraComponent extends Component {
   };
 
   toggleCameraOnOff = () => {
-    this.setState({ isCameraOn: this.state.isCameraOn === 'on' ? 'off' : 'on' });
+    this.setState({
+      isCameraOn: this.state.isCameraOn === 'on' ? 'off' : 'on',
+    });
   };
 
   toggleRecording = () => {
@@ -176,8 +215,7 @@ class CameraComponent extends Component {
 
     if (this.state.readyRecord) {
       this.stopRecording();
-    }
-    else {
+    } else {
       this.readyRecording();
     }
   };
@@ -187,18 +225,20 @@ class CameraComponent extends Component {
 
     if (!this.state.isPlaying) {
       this.playBeat();
-    }
-    else {
+    } else {
       this.stopBeat();
     }
-  }
+  };
 
   async playBeat() {
     if (!this.state.isPlaying) {
       try {
         const { sound: soundObject, status } = await Audio.Sound.createAsync(
-          { uri: 'https://s3.ap-northeast-2.amazonaws.com/musiabucket/sampleBeat/Bye+tagged.mp3' },
-          { shouldPlay: true }
+          {
+            uri:
+              'https://s3.ap-northeast-2.amazonaws.com/musiabucket/sampleBeat/Bye+tagged.mp3',
+          },
+          { shouldPlay: true },
         );
         this.playbackInstance = soundObject;
         // Your sound is playing!
@@ -213,32 +253,18 @@ class CameraComponent extends Component {
       this.playbackInstance.stopAsync();
       this.playbackInstance = null;
     }
-  }
+  };
 
   readyRecording() {
-    this.interval = setInterval(() => {
-      this.setState((prevState) => {
-        return {
-          timer: prevState.timer - 1
-        };
+    const countDown = setInterval(() => {
+      this.setState({
+        timer: this.state.timer - 1,
       });
     }, 1000);
+    this.setState({
+      interval: countDown,
+    });
   }
-
-  setVideoDuration() {
-    const interval_duration = setInterval(() => {
-      // this.setState((prevState) => {
-      //   return {
-      //     duration: prevState.duration + 100
-      //   };
-      // });
-      this.setState({
-        duration: this.state.duration + 100
-      })
-    }, 1000);
-    console.log('11111111111111111111', this.state.duration);
-  }
-
 
   // togglePauseResume = () => {
   //   this.setState({
@@ -279,6 +305,7 @@ class CameraComponent extends Component {
     let recordingConfig = {
       quality: Camera.Constants.VideoQuality['1080p'],
       maxDuration: 60,
+      mute: false,
     };
 
     if (this.camera) {
@@ -290,24 +317,25 @@ class CameraComponent extends Component {
           uri: data.uri,
           fs: `${FileSystem.documentDirectory}videos/Video_${
             this.state.recordingId
-            }.mp4`,
+          }.mp4`,
           rollUri: saveResult,
         });
         this.state.recordingId = this.state.recordingId + 1;
       });
     }
-
-    // if (this.state.readyRecord) {
-    //   this.setState({ startRecord: true });
-    // }
-  };
+  }
 
   stopRecording() {
+    const currentProps = this.props;
+
     if (this.camera) {
+      clearInterval(this.state.interval);
       this.camera.stopRecording();
-      clearInterval(this.interval);
-      clearInterval(this.Interval_duration);
-      this.setState({ readyRecord: false, startRecord: false, timer: 3, duration: 0 });
+      currentProps.restartTimer();
+      this.setState({
+        readyRecord: false,
+        timer: 3,
+      });
     }
   }
 
@@ -325,9 +353,7 @@ class CameraComponent extends Component {
 
   renderNoPermissions() {
     return (
-      <View
-        style={styles.noPermissions}
-      >
+      <View style={styles.noPermissions}>
         <Text style={{ color: 'white' }}>
           Camera permissions not granted - cannot open camera preview.
         </Text>
@@ -337,21 +363,11 @@ class CameraComponent extends Component {
 
   renderTopBar() {
     return (
-      <View
-        searchBar
-        rounded
-        style={styles.topBarContainer}
-      >
-        <View
-          style={styles.topBarInner}
-        >
+      <View searchBar rounded style={styles.topBarContainer}>
+        <View style={styles.topBarInner}>
           <View style={styles.topBarLeft}>
             <TouchableOpacity onPress={this.closeCamera}>
-              <AntDesign
-                name='close'
-                size={32}
-                style={styles.close}
-              />
+              <AntDesign name="close" size={32} style={styles.close} />
             </TouchableOpacity>
           </View>
           <View style={styles.topBarRight}>
@@ -364,7 +380,7 @@ class CameraComponent extends Component {
             </TouchableOpacity>
             <TouchableOpacity onPress={this.toggleFacing}>
               <FontAwesome
-                name='refresh'
+                name="refresh"
                 size={32}
                 style={styles.topBarFacing}
               />
@@ -383,49 +399,57 @@ class CameraComponent extends Component {
   }
 
   renderBottomBar() {
+    const { elapsedTime } = this.props.camera;
     return (
       <View>
         <View style={styles.bottomBarRecordArea}>
-          <Text>{durationToStr(this.state.duration)}</Text>
-          <TouchableOpacity onPress={this.toggleRecording}
-            style={styles.bottomBarRecordWarp}>
-            {this.state.readyRecord ?
-              this.state.timer ?
-                <View style={styles.bottomBarRecordInner}><Text style={styles.countDown}>{this.state.timer}</Text></View>
-                : (<FontAwesome
-                  name='stop'
+          {this.state.timer >= 0 ? null : (
+            <Text style={styles.recordDuration}>{formatTime(elapsedTime)}</Text>
+          )}
+          <TouchableOpacity
+            onPress={this.toggleRecording}
+            style={styles.bottomBarRecordWarp}
+          >
+            {this.state.readyRecord ? (
+              this.state.timer >= 0 ? (
+                <View style={styles.bottomBarRecordInner}>
+                  <Text style={styles.countDown}>{this.state.timer}</Text>
+                </View>
+              ) : (
+                <FontAwesome
+                  name="stop"
                   size={30}
                   style={styles.bottomBarStop}
-                />)
-              : (
-                <View style={styles.bottomBarRecordInner}>
-                </View>
-              )}
+                />
+              )
+            ) : (
+              <View style={styles.bottomBarRecordInner} />
+            )}
           </TouchableOpacity>
         </View>
-        <View
-          style={styles.bottomBarBeatArea}
-        >
+        <View style={styles.bottomBarBeatArea}>
           <View style={styles.beatPlay}>
             <TouchableOpacity onPress={this.toggleBeat}>
-              {this.state.isPlaying ?
-                (<MaterialCommunityIcons
-                  name='pause-circle'
+              {this.state.isPlaying ? (
+                <MaterialCommunityIcons
+                  name="pause-circle"
                   size={45}
                   style={{ color: 'white' }}
-                />) :
-                (<MaterialCommunityIcons
-                  name='play-circle'
+                />
+              ) : (
+                <MaterialCommunityIcons
+                  name="play-circle"
                   size={45}
                   style={{ color: 'white' }}
-                />)}
+                />
+              )}
             </TouchableOpacity>
             <Text style={styles.beatName}>인기 | Sample Beat 01</Text>
           </View>
 
           <TouchableOpacity>
             <MaterialCommunityIcons
-              name='playlist-play'
+              name="playlist-play"
               style={{ color: 'white', fontSize: 45 }}
             />
           </TouchableOpacity>
@@ -449,15 +473,14 @@ class CameraComponent extends Component {
           whiteBalance={this.state.whiteBalance}
           ratio={this.state.ratio}
           focusDepth={this.state.depth}
-          captureAudio={true}
           style={styles.cameraContainer}
-        // faceDetectorSettings={{
-        //   mode: FaceDetector.Constants.Mode.fast,
-        //   detectLandmarks: FaceDetector.Constants.Landmarks.all,
-        //   runClassifications: FaceDetector.Constants.Classifications.all,
-        // }}
-        // onFacesDetected={this.onFacesDetected}
-        // onFacesDetectionError={this.onFacesDetectionError}
+          // faceDetectorSettings={{
+          //   mode: FaceDetector.Constants.Mode.fast,
+          //   detectLandmarks: FaceDetector.Constants.Landmarks.all,
+          //   runClassifications: FaceDetector.Constants.Classifications.all,
+          // }}
+          // onFacesDetected={this.onFacesDetected}
+          // onFacesDetectionError={this.onFacesDetectionError}
         >
           {this.renderTopBar()}
           {this.renderBottomBar()}
@@ -468,7 +491,12 @@ class CameraComponent extends Component {
         </Camera>
       );
     } else {
-      return <View style={styles.container}>{this.renderTopBar()}</View>;
+      return (
+        <View style={styles.container}>
+          {this.renderTopBar()}
+          {this.renderBottomBar()}
+        </View>
+      );
     }
   }
 
@@ -477,13 +505,18 @@ class CameraComponent extends Component {
 
     if (isFocused) {
       return (
-        <View>
+        <View style={styles.container}>
           {this.renderTopBar()}
           {this.renderBottomBar()}
         </View>
       );
     } else {
-      return <View style={styles.container}>{this.renderTopBar()}</View>;
+      return (
+        <View style={styles.container}>
+          {this.renderTopBar()}
+          {this.renderBottomBar()}
+        </View>
+      );
     }
   }
 
@@ -496,24 +529,36 @@ class CameraComponent extends Component {
       ? this.renderCameraOff()
       : this.renderNoPermissions();
 
-    return this.state.isCameraOn === 'on' ?
-      (<View style={styles.container}>{cameraOnScreenContent}</View>)
-      : (<View style={{ flex: 1, backgroundColor: '#2E2E2E', justifyContent: 'space-between' }}>
-        {cameraOffScreenContent}</View>);
+    return this.state.isCameraOn === 'on' ? (
+      <View style={styles.container}>{cameraOnScreenContent}</View>
+    ) : (
+      <View style={styles.container}>{cameraOffScreenContent}</View>
+    );
   }
 }
 
-export default withNavigationFocus(CameraComponent);
+// export default withNavigationFocus(CameraComponent);
 
-// const mapStateToProps = (state) => {
-//   return {
-//     feeds: state
-//   }
-// };
+function mapStateToProps(state) {
+  // const { isPlaying, elapsedTime, timerDuration } = state;
 
-// const mapDispatchToProps = { fetchCamera };
+  return {
+    // isPlaying,
+    // elapsedTime,
+    // timerDuration,
+    ...state,
+  };
+}
 
-// export default connect(
-//   mapStateToProps,
-//   mapDispatchToProps
-// )(withNavigationFocus(CameraComponent));
+function mapDispatchToProps(dispatch) {
+  return {
+    startTimer: bindActionCreators(videoActions.startTimer, dispatch),
+    restartTimer: bindActionCreators(videoActions.restartTimer, dispatch),
+    addSecond: bindActionCreators(videoActions.addSecond, dispatch),
+  };
+}
+
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps,
+)(withNavigationFocus(CameraComponent));

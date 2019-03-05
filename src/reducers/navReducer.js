@@ -1,13 +1,20 @@
-import { AppNavigator } from '../navigation/AppNavigator'; // 아까 걔임..
+/* eslint-disable */
+import { AppNavigator } from '../navigation/AppNavigator';
 
 const initialState = AppNavigator.router.getStateForAction(
-    AppNavigator.router.getActionForPathAndParams('Main') // 액션을 반환한다: {type: 'Navigation/NAVIGATE', 'routeName': 'Home'}
+  AppNavigator.router.getActionForPathAndParams('Main'),
 );
 
-const navigatorReducer = (state = initialState, action) => {
-    const nextState = AppNavigator.router.getStateForAction(action, state);
+// const initialState = {
+//   router: AppNavigator.router.getStateForAction(
+//     AppNavigator.router.getActionForPathAndParams('Main'),
+//   ),
+// };
 
-    return nextState || state;
+const navigatorReducer = (state = initialState, action) => {
+  const nextState = AppNavigator.router.getStateForAction(action, state);
+
+  return nextState || state;
 };
 
-export { navigatorReducer };
+export default { navigatorReducer };

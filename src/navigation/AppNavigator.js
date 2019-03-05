@@ -1,3 +1,4 @@
+/* eslint-disable */
 import React from 'react';
 import { createAppContainer, createSwitchNavigator } from 'react-navigation';
 import { connect } from 'react-redux';
@@ -10,8 +11,8 @@ export const AppNavigator = createAppContainer(
   }),
 );
 
-const mapStateToProps = state => {
+function mapStateToProps(state) {
   return { ...state };
-};
+}
 
 export default connect(mapStateToProps)(AppNavigator);

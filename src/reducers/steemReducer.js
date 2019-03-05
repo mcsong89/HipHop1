@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { createAction, handleActions } from 'redux-actions';
 
 // 액션 타입을 정의해줍니다.
@@ -17,53 +18,54 @@ const initialState = {
     isNext: false,
     startAuthor: '',
     startPermlink: '',
-  }
-}
+  },
+};
 
 export const fetchFeeds = (tag, limit = DEFAULT_LIMIT, order = 'created') => {
   return (dispatch, state) => {
     // const { nextFeeds } = state().steem;
     const data = {
       id: 1,
-      jsonrpc: "2.0",
-      method: "call",
+      jsonrpc: '2.0',
+      method: 'call',
       params: [
-        "database_api",
+        'database_api',
         `get_discussions_by_${order}`,
         [
           {
-            tag: tag || "kr",
+            tag: tag || 'kr',
             limit: limit + 1,
             // start_author: nextFeeds.startAuthor,
             // start_permlink: nextFeeds.startPermlink
-          }
-        ]
-      ]
+          },
+        ],
+      ],
     };
-    return fetch('https://api.steemit.com',
-      {
-        method: 'POST',
-        body: JSON.stringify(data)
-      })
+    return fetch('https://api.steemit.com', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    })
       .then(res => res.json())
       .then(res => {
         let nextFeeds = {
           isNext: false, // 다음 글이 있는지 여부
           startAuthor: '',
-          startPermlink: ''
-        }
+          startPermlink: '',
+        };
         if (res.result.length > DEFAULT_LIMIT) {
           const { author, permlink } = res.result.pop();
           nextFeeds = {
             isNext: true, // 다음 글이 있는지 여부
             startAuthor: author,
-            startPermlink: permlink
-          }
+            startPermlink: permlink,
+          };
         }
-        dispatch(getFeeds({
-          feeds: res.result,
-          nextFeeds
-        }))
+        dispatch(
+          getFeeds({
+            feeds: res.result,
+            nextFeeds,
+          }),
+        );
       })
       .catch(error => {
         console.error('ERROR', error); // TODO: 에러처리는 어떻게 할 것인가? 학습필요!!!
@@ -94,22 +96,22 @@ export const fetchFeeds = (tag, limit = DEFAULT_LIMIT, order = 'created') => {
   //   dataset.setReadOffset(0);
   //   console.log('dataset', dataset);
   // }
-}
+};
 
-export default handleActions({
-  [GET_FEEDS]: (state, action) => {
-    // console.log(GET_FEEDS, { state, action });
-    // console.log('nextFeeds', action.payload.nextFeeds);
+export default handleActions(
+  {
+    [GET_FEEDS]: (state, action) => {
+      // console.log(GET_FEEDS, { state, action });
+      // console.log('nextFeeds', action.payload.nextFeeds);
 
-    // state 업데이트
-    state = {
-      ...state,
-      feeds: [
-        ...state.feeds,
-        ...action.payload.feeds
-      ],
-      ...action.payload.nextFeeds
-    }
-    return state;
+      // state 업데이트
+      state = {
+        ...state,
+        feeds: [...state.feeds, ...action.payload.feeds],
+        ...action.payload.nextFeeds,
+      };
+      return state;
+    },
   },
-}, initialState);
+  initialState,
+);

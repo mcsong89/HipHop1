@@ -110,8 +110,12 @@ export default StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-  beatName: {
-    color: 'white',
-    fontSize: 20,
+  enabledTouch: {},
+  disabledTouch: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-end',
+    paddingHorizontal: 10,
+    marginBottom: 15,
   },
 });

@@ -129,6 +129,9 @@ class CameraComponent extends Component {
     const currentProps = this.props;
 
     clearInterval(this.state.interval);
+    if (this.state.isPlaying) {
+      this.toggleBeat();
+    }
     if (currentProps.camera.elapsedTime !== 0 || this.state.timer < 3) {
       currentProps.restartTimer();
       this.setState({
@@ -175,6 +178,9 @@ class CameraComponent extends Component {
       clearInterval(this.state.interval);
       currentProps.startTimer();
       this.startRecording();
+      if (!this.state.isPlaying) {
+        this.toggleBeat();
+      }
     }
   }
 
@@ -217,6 +223,9 @@ class CameraComponent extends Component {
       this.stopRecording();
     } else {
       this.readyRecording();
+      if (this.state.isPlaying) {
+        this.toggleBeat();
+      }
     }
   };
 
@@ -332,6 +341,9 @@ class CameraComponent extends Component {
       clearInterval(this.state.interval);
       this.camera.stopRecording();
       currentProps.restartTimer();
+      if (this.state.isPlaying && this.playbackInstance !== null) {
+        this.toggleBeat();
+      }
       this.setState({
         readyRecord: false,
         timer: 3,
@@ -399,12 +411,14 @@ class CameraComponent extends Component {
   }
 
   renderBottomBar() {
-    const { elapsedTime } = this.props.camera;
+    const { elapsedTime, timerDuration } = this.props.camera;
     return (
       <View>
         <View style={styles.bottomBarRecordArea}>
           {this.state.timer >= 0 ? null : (
-            <Text style={styles.recordDuration}>{formatTime(elapsedTime)}</Text>
+            <Text style={styles.recordDuration}>
+              {formatTime(timerDuration - elapsedTime)}
+            </Text>
           )}
           <TouchableOpacity
             onPress={this.toggleRecording}
@@ -427,30 +441,51 @@ class CameraComponent extends Component {
             )}
           </TouchableOpacity>
         </View>
-        <View style={styles.bottomBarBeatArea}>
+        <View
+          style={
+            this.state.readyRecord
+              ? styles.disabledTouch
+              : styles.bottomBarBeatArea
+          }
+          pointerEvents={this.state.readyRecord ? 'none' : 'auto'}
+        >
           <View style={styles.beatPlay}>
             <TouchableOpacity onPress={this.toggleBeat}>
               {this.state.isPlaying ? (
                 <MaterialCommunityIcons
                   name="pause-circle"
                   size={45}
-                  style={{ color: 'white' }}
+                  style={{
+                    color: this.state.readyRecord ? '#6E6E6E' : 'white',
+                  }}
                 />
               ) : (
                 <MaterialCommunityIcons
                   name="play-circle"
                   size={45}
-                  style={{ color: 'white' }}
+                  style={{
+                    color: this.state.readyRecord ? '#6E6E6E' : 'white',
+                  }}
                 />
               )}
             </TouchableOpacity>
-            <Text style={styles.beatName}>인기 | Sample Beat 01</Text>
+            <Text
+              style={{
+                color: this.state.readyRecord ? '#6E6E6E' : 'white',
+                fontSize: 20,
+              }}
+            >
+              인기 | Sample Beat 01
+            </Text>
           </View>
 
           <TouchableOpacity>
             <MaterialCommunityIcons
               name="playlist-play"
-              style={{ color: 'white', fontSize: 45 }}
+              style={{
+                color: this.state.readyRecord ? '#6E6E6E' : 'white',
+                fontSize: 45,
+              }}
             />
           </TouchableOpacity>
         </View>
